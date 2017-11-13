@@ -1,0 +1,17 @@
+function init(self)
+    msg.post(".", "acquire_input_focus") 
+end
+
+function on_input(self, action_id, action)
+        local button = gui.get_node("buton")
+        if gui.pick_node(button, action.x, action.y) then 
+            gui.set_texture(button, "fara_mouse")
+            gui.play_flipbook(button, "buton")
+            if action_id == hash("click_left") and action.pressed then 
+            	msg.post("go#joc_script", "joc_nou")
+            end
+        else
+            gui.set_texture(button,"cu_mouse")
+            gui.play_flipbook(button, "buton2")
+        end
+end

@@ -1,0 +1,255 @@
+local turn = 1
+local marcaje = {}
+local final_joc = false;
+local tabla = {}
+
+function init(self)
+	-- msg.post("@render:", "clear_color", { color = vmath.vector4(1, 0, 0, 0) } )
+    msg.post(".", "acquire_input_focus") 
+    -- mesajele pentru mutari
+    msg.post("go#jucatorX", "enable")
+    msg.post("go#jucator0", "disable")
+    -- mesajele pentru castigatori/egalitate
+    msg.post("go#winner1","disable")
+    msg.post("go#winner2","disable")
+    msg.post("go#egalitate","disable")
+    -- mutare invalida
+    msg.post("go#mutare_invalida", "disable")
+    -- butonul de joc nou
+    msg.post("buton","disable")
+    
+    tabla[0] = {}
+    tabla[1] = {}
+    tabla[2] = {}
+    for i=0, 2, 1 do
+    	tabla[0][i] = nil
+    	tabla[1][i] = nil
+    	tabla[2][i] = nil
+    end
+end
+
+local function afisareTabla()
+	for i=0, 2, 1 do
+		print(tabla[i][0], tabla[i][1], tabla[i][2])
+	end
+end
+
+local function placePiece(i, j, piece)
+	-- piece este 1 sau 2, 1 pentru X 2 pentru 0
+	if tabla[i][j] == nil then
+		tabla[i][j] = piece
+		return true
+	else
+		return false
+	end
+end
+
+local function victorie()
+	local winner = nil;
+	for i=0, 2, 1 do
+		if(tabla[0][i] == tabla[1][i] and tabla[1][i] == tabla[2][i] and winner == nil) then
+			winner = tabla[1][i]
+		end
+		if(tabla[i][0] == tabla[i][1] and tabla[i][1] == tabla[i][2] and winner == nil) then 
+			winner = tabla[i][1]
+		end
+	end
+	
+	if(tabla[0][0] == tabla[1][1] and tabla[1][1] == tabla[2][2] and winner == nil) then
+		winner = tabla[1][1]
+	end
+	if(tabla[0][2] == tabla[1][1] and tabla[1][1] == tabla[2][0] and winner == nil) then
+		winner = tabla[0][2]
+	end
+	
+	local egalitate = 1
+	for i=0, 2, 1 do
+		if(tabla[i][0] == nil or tabla[i][1] == nil or tabla[i][2] == nil) then
+			egalitate = 0
+		end
+	end
+	
+	if egalitate == 1 and winner == nil then
+		return 0
+	end
+	
+	if (winner == nil) then
+		return nil
+	elseif winner == 1 then
+		return 1
+	elseif winner == 2 then
+		return 2
+	end
+	
+end
+
+
+function jocNou()
+	go.delete_all(marcaje) -- sterg spawn-urile de X si 0
+	marcaje = {}
+	msg.post("go#jucatorX", "enable")
+    msg.post("go#jucator0", "disable")
+    msg.post("go#winner1","disable")
+    msg.post("go#winner2","disable")
+    msg.post("go#egalitate","disable")
+    msg.post("go#mutare_invalida", "disable")
+    msg.post("buton","disable")
+    final_joc = false;
+    turn = 1;
+    for i=0,2,1 do
+    	tabla[0][i] = nil
+    	tabla[1][i] = nil
+    	tabla[2][i] = nil
+    end
+end
+
+local function finalJoc(rezultat)
+	final_joc = true
+	if rezultat == 1 then
+		-- JUCATOR1 CEL CU X A CASTIGAT
+		msg.post("scor#scor_gui", "scorX")
+		msg.post("go#winner1","enable")
+		msg.post("go#jucatorX", "disable")
+  	  msg.post("go#jucator0", "disable")
+	elseif rezultat == 2 then
+		-- JUCATOR2 CEL CU 0 A CASTIGAT
+		msg.post("scor#scor_gui", "scor0")
+		msg.post("go#winner2","enable")
+		msg.post("go#jucatorX", "disable")
+  	  msg.post("go#jucator0", "disable")
+    else
+    	-- EGALITATE
+    	msg.post("scor#scor_gui", "scorX")
+    	msg.post("scor#scor_gui", "scor0")
+    	msg.post("go#egalitate","enable")
+		msg.post("go#jucatorX", "disable")
+  	  msg.post("go#jucator0", "disable")
+    end
+end
+
+-- face marcarea pe tabla si spawneaza X sau 0
+local function place(lin, col, fact, piesa)
+		if lin[1] and col[1] then
+			if placePiece(0,0,piesa) == true then
+				local id = factory.create(fact, vmath.vector3(635, 500, 1), nil, {}, 0.5) 
+				table.insert(marcaje, id)
+			else
+				-- print("Nu s-a putut pune piesa")
+				return -1
+			end
+		elseif lin[1] and col[2] then
+			if placePiece(0,1,piesa) == true then
+				local id = factory.create(fact, vmath.vector3(810, 500, 1), nil, {}, 0.5) 
+				table.insert(marcaje, id)
+			else
+				-- print("Nu s-a putut pune piesa")
+				return -1
+			end
+		elseif lin[1] and col[3] then
+			if placePiece(0,2,piesa) == true then
+				local id = factory.create(fact, vmath.vector3(974, 500, 1), nil, {}, 0.5) 
+				table.insert(marcaje, id)
+			else
+				-- print("Nu s-a putut pune piesa")
+				return -1
+			end
+		elseif lin[2] and col[1] then
+			if placePiece(1,0,piesa) == true then
+				 local id = factory.create(fact, vmath.vector3(635, 335, 1), nil, {}, 0.5) 
+				 table.insert(marcaje, id)
+			else
+				-- print("Nu s-a putut pune piesa")
+				return -1
+			end
+		elseif lin[2] and col[2] then
+			if placePiece(1,1,piesa) == true then
+				local id = factory.create(fact, vmath.vector3(810, 335, 1), nil, {}, 0.5) 
+				table.insert(marcaje, id)
+			else
+				-- print("Nu s-a putut pune piesa")
+				return -1
+			end
+		elseif lin[2] and col[3] then
+			if placePiece(1,2,piesa) == true then
+				local id = factory.create(fact, vmath.vector3(974, 335, 1), nil, {}, 0.5) 
+				table.insert(marcaje, id)
+			else
+				-- print("Nu s-a putut pune piesa")
+				return -1
+			end
+		elseif lin[3] and col[1] then
+			if placePiece(2,0,piesa) == true then
+				local id = factory.create(fact, vmath.vector3(635, 170, 1), nil, {}, 0.5) 
+				table.insert(marcaje, id)
+			else
+				-- print("Nu s-a putut pune piesa")
+				return -1
+			end
+		elseif lin[3] and col[2] then
+			if placePiece(2,1,piesa) == true then
+				local id = factory.create(fact, vmath.vector3(810, 170, 1), nil, {}, 0.5) 
+				table.insert(marcaje, id)
+			else
+				-- print("Nu s-a putut pune piesa")
+				return -1
+			end
+		elseif lin[3] and col[3] then
+			if placePiece(2,2,piesa) == true then
+				local id = factory.create(fact, vmath.vector3(974, 170, 1), nil, {}, 0.5) 
+				table.insert(marcaje, id)
+			else
+				-- print("Nu s-a putut pune piesa")
+				return -1
+			end
+		else
+			-- Cazul in care nu ne aflam pe tabla de joc
+			return -1
+		end
+		
+end
+
+function on_input(self, action_id, action)
+	-- pozitia elementului plasat este descrisa de lin si col care sunt linia si coloana tablei 3x3
+	local col = {action.x < 721 and action.x > 551, action.x < 890 and action.x > 721, action.x < 1056 and action.x > 890}
+    local lin = {action.y > 417 and action.y < 584, action.y > 251 and action.y < 417, action.y < 251 and action.y > 82}
+    if final_joc == false then
+    	if action_id == hash("click_left") and action.pressed then 
+    		-- mutare jucatorul cu X
+    		if turn == 1 then
+    			if place(lin, col, "#icsFactory", 1) == -1 then
+    				msg.post("go#mutare_invalida", "enable")
+    			else
+    				msg.post("go#mutare_invalida", "disable")
+    				msg.post("go#jucatorX", "disable")
+    				msg.post("go#jucator0", "enable")
+    				turn = 2;
+    			end
+    		-- mutare jucatorul cu Y
+    		elseif turn == 2 then
+    			if place(lin, col, "#zeroFactory", 2) == -1 then
+    				msg.post("go#mutare_invalida", "enable")
+    			else 
+    				msg.post("go#mutare_invalida", "disable")
+    				msg.post("go#jucator0", "disable")
+    				msg.post("go#jucatorX", "enable")
+    				turn = 1;
+    			end
+    		end
+    	end
+	end
+end
+
+function on_message(self, message_id, message, sender)
+  if message_id == hash("joc_nou") then
+    jocNou()
+  end
+end
+
+function update()
+	local rezultat = victorie()
+	-- check final joc
+	if rezultat ~= nil and final_joc == false then
+		finalJoc(rezultat)
+		msg.post("buton","enable")
+	end
+end

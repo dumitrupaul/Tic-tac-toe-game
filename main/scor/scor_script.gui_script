@@ -1,0 +1,19 @@
+function init(self)
+	self.scorX = 0;
+	self.scor0 = 0;
+end
+
+function update(self, dt)
+	local text = gui.get_node("nr")
+	gui.set_text(text, tostring(self.scorX) .. " - " .. tostring(self.scor0))
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("scorX") then
+		self.scorX = self.scorX + 1
+	end
+	if message_id == hash("scor0") then
+		self.scor0 = self.scor0 + 1
+	end
+end
+
